@@ -1,23 +1,21 @@
-# Employees API
-
-Projeto desenvolvido para gerenciamento de colaboradores, utilizando PostgreSQL, NestJS, React e Docker Compose.
+# Employees
 
 ## Sumário
 
-* [Descrição](#descrição)
+* [O que é o projeto](#o-que-é-o-projeto)
 * [Tecnologias](#tecnologias)
-* [Estrutura do projeto](#estrutura-do-projeto)
+* [Pastas](#pastas)
 * [Requisitos](#requisitos)
-* [Como executar](#como-executar)
-* [Endpoints CRUD](#endpoints-crud)
+* [Como rodar](#como-rodar)
+* [Onde acessar](#onde-acessar)
+* [Banco de dados](#banco-de-dados)
+* [Endpoints](#endpoints)
 * [Exemplos de resposta](#exemplos-de-resposta)
-* [Como parar o projeto](#como-parar-o-projeto)
+* [Como parar](#como-parar)
 
-## Descrição
+## o projeto
 
-Sistema para cadastro e gerenciamento de colaboradores.
-
-A tabela principal do projeto será `employees`, contendo os seguintes campos:
+É um CRUD de funcionários (criar, listar, buscar, atualizar e apagar). Os dados ficam numa tabela chamada `employees` com estes campos:
 
 * `id`
 * `full_name`
@@ -25,88 +23,98 @@ A tabela principal do projeto será `employees`, contendo os seguintes campos:
 * `role`
 * `salary`
 
+
 ## Tecnologias
 
-* PostgreSQL
-* NestJS
-* React
-* Docker
-* Docker Compose
+* PostgreSQL (banco de dados)
+* NestJS (API)
+* React (front)
+* Docker e Docker Compose
 
-## Estrutura do projeto
+## Pastas
 
 ```text
 employees/
-├── api/
-├── front/
-├── deploy/
+├── api/      -> API em NestJS
+├── front/    -> telas em React
+├── deploy/   -> docker-compose.yml
 └── README.md
 ```
 
-## Requisitos
-
-Para executar o projeto, é necessário ter instalado:
-
-* Git
-* Docker
-* Docker Compose
-* Node.js
-
-## Como executar
-
-Clone o repositório:
-
 ```bash
 git clone URL_DO_REPOSITORIO
-```
-
-Entre na pasta do projeto:
-
-```bash
 cd employees
 ```
-
-Execute os containers:
 
 ```bash
 docker compose -f deploy/docker-compose.yml up --build
 ```
 
-Após a inicialização, os serviços estarão disponíveis nas portas definidas no Docker Compose.
-
-## Endpoints CRUD
-
-### Listar colaboradores
-
-```http
-GET /employees
+```bash
+docker compose -f deploy/docker-compose.yml ps
 ```
 
-### Buscar colaborador por ID
+| O que      | Endereço                      |
+|------------|-------------------------------|
+| Front      | http://localhost:8080         |
+| API        | http://localhost:3000         |
+| Swagger    | http://localhost:3000/docs    |
+| PostgreSQL | localhost:5432                |
 
-```http
-GET /employees/:id
+
+* usuário: `postgres`
+* senha: `postgres`
+* banco: `appdb`
+
+
+## Banco de dados
+
+O PostgreSQL utiliza:
+
+Banco: employees
+Usuário: postgres
+Senha: postgres
+Porta: 5432
+
+```bash
+docker compose -f deploy/docker-compose.yml up -d db
 ```
 
-### Criar colaborador
-
-```http
-POST /employees
+```bash
+docker compose -f deploy/docker-compose.yml exec db psql -U postgres -d appdb
 ```
 
-### Atualizar colaborador
-
-```http
-PATCH /employees/:id
+```bash
+docker compose -f deploy/docker-compose.yml exec db psql -U postgres -d appdb -c "SELECT * FROM employees;"
 ```
 
-### Excluir colaborador
-
-```http
-DELETE /employees/:id
+```bash
+docker compose -f deploy/docker-compose.yml down     
+docker compose -f deploy/docker-compose.yml up -d    
 ```
 
-## Exemplo de cadastro
+```bash
+docker volume ls
+```
+
+As variáveis do banco (usuário, senha, nome e porta) têm valor padrão no compose.
+
+## Endpoints
+
+| Método | Rota             | O que faz                   |
+|--------|------------------|-----------------------------|
+| GET    | `/employees`     | lista todos                 |
+| GET    | `/employees/:id` | busca um pelo id            |
+| POST   | `/employees`     | cadastra um novo            |
+| PATCH  | `/employees/:id` | atualiza um funcionário     |
+| DELETE | `/employees/:id` | apaga um funcionário        |
+
+
+
+
+## Exemplos de resposta
+
+# Cadastrar (`POST /employees`):
 
 ```json
 {
@@ -117,7 +125,7 @@ DELETE /employees/:id
 }
 ```
 
-## Exemplo de resposta
+Resposta (`201`):
 
 ```json
 {
@@ -129,15 +137,43 @@ DELETE /employees/:id
 }
 ```
 
-## Como parar o projeto
+Listar (`GET /employees`):
 
-Para parar os containers:
+```json
+[
+  {
+    "id": 1,
+    "full_name": "João da Silva",
+    "document": "12345678900",
+    "role": "Motorista",
+    "salary": 3500.00
+  }
+]
+```
+
+Atualizar (`PATCH /employees/1` com `{"salary": 4000}`):
+
+```json
+{
+  "id": 1,
+  "full_name": "João da Silva",
+  "document": "12345678900",
+  "role": "Motorista",
+  "salary": 4000
+}
+```
+
+```json
+{
+  "message": "Employee 99 não encontrado",
+  "error": "Not Found",
+  "statusCode": 404
+}
+```
 
 ```bash
 docker compose -f deploy/docker-compose.yml down
 ```
-
-Para parar os containers e remover também os volumes:
 
 ```bash
 docker compose -f deploy/docker-compose.yml down -v

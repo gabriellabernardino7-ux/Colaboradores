@@ -1,0 +1,77 @@
+name: employees-app
+
+services:
+  # ---------- Banco de dados ----------
+  db:
+    image: postgres:16-alpine
+    container_name: employees-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-appdb}
+    ports:
+      - "${DB_EXTERNAL_PORT:-5432}:5432"     # acesso externo (DBeaver, psql, etc.)
+    volumes:
+      - pgdata:/var/lib/postgresql/data      # volume nomeado: dados persistem
+    networks:
+      - db_net                               # só a API enxerga o banco
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-appdb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------- API NestJS ----------
+  api:
+    build: ../api
+    container_name: employees-api
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      DB_HOST: db                            # DNS interno = nome do serviço
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-appdb}
+    ports:
+      - "${API_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - db_net                               # API <-> banco
+      - app_net                              # API <-> front
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/employees').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # ---------- Front React (nginx) ----------
+  front:
+    build: ../front
+    container_name: employees-front
+    restart: unless-stopped
+    ports:
+      - "${FRONT_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - app_net                              
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+networks:
+  db_net:
+  app_net:
+
+volumes:
+  pgdata:

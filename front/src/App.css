@@ -1,0 +1,9 @@
+:root { font-family: system-ui, sans-serif; color: #1f2933; background: #f5f7fa; }
+body { margin: 0; }
+main { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+h1 { margin: 0 0 1.5rem; }
+table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #d9e0e7; }
+th, td { padding: .75rem 1rem; text-align: left; border-bottom: 1px solid #e8edf2; }
+th { background: #eaeff4; }
+.num { text-align: right; }
+.erro { color: #b42318; }
